@@ -2,7 +2,7 @@ FROM golang as build
 
 # go mod Installation source, container environment variable addition will override the default variable value
 ENV GO111MODULE=on
-ENV GOPROXY=https://goproxy.cn,direct
+#ENV GOPROXY=https://goproxy.cn,direct
 
 # Set up the working directory
 WORKDIR /Open-IM-Server

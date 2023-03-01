@@ -2,7 +2,7 @@
 source ./style_info.cfg
 
 echo -e "check time synchronize.................................."
-t=`curl http://time.akamai.com/?iso -s`
+t=`curl "http://time.akamai.com/?iso" -s`
 t1=`date -d $t +%s`
 t2=`date +%s`
 let between=t2-t1

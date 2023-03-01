@@ -2,7 +2,7 @@
 version: "3"
 services:
   mysql:
-    image: mysql:5.7
+    image: mariadb:10.5.8
     ports:
       - 13306:3306
       - 23306:33060
@@ -24,9 +24,9 @@ services:
       - ${DATA_DIR}/components/mongodb/data/db:/data/db
       - ${DATA_DIR}/components/mongodb/data/logs:/data/logs
       - ${DATA_DIR}/components/mongodb/data/conf:/etc/mongo
-      - ./script/mongo-init.sh:/docker-entrypoint-initdb.d/mongo-init.sh:ro 
+      - ./script/mongo-init.sh:/docker-entrypoint-initdb.d/mongo-init.sh:ro
     environment:
-      - TZ=Asia/Shanghai
+      - TZ=Asia/Singapore
       # cache
       - wiredTigerCacheSizeGB=1
       - MONGO_INITDB_ROOT_USERNAME=${USER}
@@ -56,6 +56,7 @@ services:
 
   zookeeper:
     image: wurstmeister/zookeeper
+    platform: linux/amd64
     ports:
       - 2181:2181
     container_name: zookeeper
@@ -77,7 +78,7 @@ services:
       KAFKA_BROKER_ID: 0
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_CREATE_TOPICS: "ws2ms_chat:8:1,ms2ps_chat:8:1,msg_to_mongo:8:1"
-      KAFKA_ADVERTISED_LISTENERS: INSIDE://127.0.0.1:9092,OUTSIDE://103.116.45.174:9092
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka:9092,OUTSIDE://103.116.45.174:9092
       KAFKA_LISTENERS: INSIDE://:9092,OUTSIDE://:9093
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT"
       KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
@@ -86,6 +87,7 @@ services:
 
   etcd:
     image: quay.io/coreos/etcd
+    platform: linux/amd64
     ports:
       - 2379:2379
       - 2380:2380
@@ -105,8 +107,8 @@ services:
       - 9090:9090
     container_name: minio
     volumes:
-      - /mnt/data:/data
-      - /mnt/config:/root/.minio
+      - ./mnt/data:/data
+      - ./mnt/config:/root/.minio
     environment:
       MINIO_ROOT_USER: ${USER}
       MINIO_ROOT_PASSWORD: ${PASSWORD}
@@ -115,7 +117,20 @@ services:
 
 
   open_im_server:
-    image: openim/open_im_server:v2.3.8
+    # image: openim/open_im_server:v2.3.8
+    build:
+      context: ./
+      dockerfile: deploy.Dockerfile
+    ports:
+      - 10001:10001
+      - 10002:10002
+      - 10003:10003
+      - 10004:10004
+      - 10140:10140
+      - 10170:10170
+      - 45000:45000
+      - 6060:6060
+    platform: linux/amd64
     container_name: open_im_server
     volumes:
       - ./logs:/Open-IM-Server/logs
@@ -131,7 +146,7 @@ services:
       - redis
       - etcd
       - minio
-    network_mode: "host"
+#    network_mode: "host"
     logging:
       driver: json-file
       options:
@@ -140,6 +155,10 @@ services:
 
   open_im_enterprise:
     image: openim/open_im_enterprise:v1.0.3
+    platform: linux/amd64
+    ports:
+      - 10008:10008
+      - 10009:10009
     container_name: open_im_enterprise
     volumes:
       - ./logs:/Open-IM-Enterprise/logs
@@ -152,7 +171,7 @@ services:
       - etcd
       - minio
       - open_im_server
-    network_mode: "host"
+#    network_mode: "host"
     logging:
       driver: json-file
       options:
